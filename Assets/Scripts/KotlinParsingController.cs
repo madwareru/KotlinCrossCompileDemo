@@ -23,7 +23,7 @@ namespace DefaultNamespace
             }
             catch (Exception ex)
             {
-                InputOutputProvider.OutputField.text = ex.Message;
+                InputOutputProvider.OutputField.text = "<color=red>" + ex.Message + "</color>";
                 return;
             }
             var result = CodeWriter
@@ -43,7 +43,7 @@ namespace DefaultNamespace
             }
             catch (Exception ex)
             {
-                InputOutputProvider.OutputField.text = ex.Message;
+                InputOutputProvider.OutputField.text = "<color=red>" + ex.Message + "</color>";
                 return;
             }
             var result = CodeWriter
