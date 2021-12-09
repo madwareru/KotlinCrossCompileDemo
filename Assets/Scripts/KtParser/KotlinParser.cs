@@ -156,10 +156,10 @@ namespace DefaultNamespace.KtParser
                 .Seq(AnnotationParser.Seq(Whitespaces).Many().Optional())
                 .Seq(BlankLines.Optional())
                 .Seq(Whitespaces)
-                .Seq(Parse.String("abstract").Seq(Whitespaces).Optional())
+                .Seq(Parse.String("abstract").Token().Optional())
                 .Seq(Parse.String("fun"))
                 .Seq(Whitespaces)
-            from methodName in WordParser
+            from methodName in WordParser.Token()
             from args in ArgParser.Many().Braces('(', ')').Token()
             from returnedType in ReturnTypeParser
             from __ in BlankLines.Many()
@@ -169,7 +169,7 @@ namespace DefaultNamespace.KtParser
             from args in ConstructorArgParser.Many().Braces('(', ')')
             select new ArgumentsSyntaxNode(args.ToArray());
 
-        private static readonly Parser<IMethodSyntaxNode[]> ObjectBodyParser =
+        private static readonly Parser<IMethodSyntaxNode[]> SharedBodyParser =
             from _ in InterfaceAncestors.Optional()
                 .Seq(Parse.Char('{').Once())
                 .Seq(BlankLines)
@@ -182,19 +182,19 @@ namespace DefaultNamespace.KtParser
 
         private static readonly Parser<IRootSyntaxNode> AbstractClassParser =
             from packageName in PackageParser
-            from _ in ImportHeading.Seq(Parse.String("abstract class")).Seq(Whitespaces)
-            from abstractClassName in WordParser
+            from _ in ImportHeading.Seq(Parse.String("abstract class")).Token()
+            from abstractClassName in WordParser.Token()
             from constructorArgs in ConstructorArgsParser.Optional()
-            from classMethods in ObjectBodyParser
+            from classMethods in SharedBodyParser
             let constructorArguments = constructorArgs.UnwrapOrDefault(EmptyArgumentsSyntaxNode)
             let className = $"{packageName}.{RemoveAbstract(abstractClassName)}"
             select new RootSyntaxNode(className, constructorArguments, classMethods);
         
         private static readonly Parser<IRootSyntaxNode> InterfaceParser =
             from packageName in PackageParser
-            from _ in ImportHeading.Seq(Parse.String("interface")).Seq(Whitespaces)
-            from interfaceName in WordParser
-            from interfaceMethods in ObjectBodyParser
+            from _ in ImportHeading.Seq(Parse.String("interface")).Token()
+            from interfaceName in WordParser.Token()
+            from interfaceMethods in SharedBodyParser
             let className = $"{packageName}.{RemoveI(interfaceName)}"
             select new RootSyntaxNode(className, interfaceMethods);
 
