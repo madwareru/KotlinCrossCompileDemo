@@ -152,13 +152,10 @@ namespace DefaultNamespace.KtParser
             select t.UnwrapOrDefault(new SmartTypeSyntaxNode("Void"));
 
         private static readonly Parser<IMethodSyntaxNode> MethodParser =
-            from _ in Whitespaces
-                .Seq(AnnotationParser.Seq(Whitespaces).Many().Optional())
+            from _ in AnnotationParser.Token().Many().Optional()
                 .Seq(BlankLines.Optional())
-                .Seq(Whitespaces)
                 .Seq(Parse.String("abstract").Token().Optional())
-                .Seq(Parse.String("fun"))
-                .Seq(Whitespaces)
+                .Seq(Parse.String("fun").Token())
             from methodName in WordParser.Token()
             from args in ArgParser.Many().Braces('(', ')').Token()
             from returnedType in ReturnTypeParser
