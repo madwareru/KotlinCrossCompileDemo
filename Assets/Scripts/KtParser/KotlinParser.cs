@@ -165,13 +165,12 @@ namespace DefaultNamespace.KtParser
             select new ArgumentsSyntaxNode(args.ToArray());
 
         private static readonly Parser<IMethodSyntaxNode[]> SharedBodyParser =
-            from _ in InterfaceAncestors.Optional()
-                .Seq(Parse.Char('{').Once())
-                .Seq(BlankLines)
-                .Token()
-            from methods in MethodParser.Many()
-            from __ in Parse.Char('}').Seq(BlankLines)
-            select methods.ToArray();
+            MethodParser.Many()
+                .SurroundBy(
+                    InterfaceAncestors.Optional().Seq(Parse.Char('{').Once()).Seq(BlankLines).Token(),
+                    Parse.Char('}').Seq(BlankLines)
+                )
+                .Map(it => it.Item2.ToArray());
         
         private static readonly IArgumentsSyntaxNode EmptyArgumentsSyntaxNode = new ArgumentsSyntaxNode();
 
