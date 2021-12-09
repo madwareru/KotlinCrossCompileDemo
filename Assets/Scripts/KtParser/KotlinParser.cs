@@ -81,7 +81,7 @@ namespace DefaultNamespace.KtParser
             select true;
 
         private static readonly Parser<IEnumerable<char>> VarianceParser =
-            Parse.String("in").Or(Parse.String("out"));
+            Parse.String("in").Or(Parse.String("out")).Token();
       
         private static readonly Parser<string> PackageParser =
             from _ in Parse.String("package").Seq(Whitespaces)
@@ -107,13 +107,12 @@ namespace DefaultNamespace.KtParser
 
         private static readonly Parser<(bool, string)> ArrayParser =
             from _ in
-                Parse.String("Array")
-                    .Seq(Whitespaces)
-                    .Seq(Parse.Char('<'))
+                Parse.String("Array").Token()
+                    .Seq(Parse.Char('<').Token())
                     .Seq(VarianceParser.Optional())
-                    .Seq(Whitespaces)
+                    .Token()
             from type in LetterDigitOrDot.Many()
-            from __ in Whitespaces.Seq(Parse.Char('>'))
+            from __ in Parse.Char('>').Token()
             select (true, RemovePrefix(new string(type.ToArray())));
 
         private static readonly Parser<(bool, string)> NonArrayParser =
@@ -129,9 +128,7 @@ namespace DefaultNamespace.KtParser
                 : new SmartTypeSyntaxNode(name);
 
         private static readonly Parser<IEnumerable<char>> VarValParser =
-            from v in Parse.String("val").Or(Parse.String("var"))
-            from _ in Whitespaces
-            select v;
+            Parse.String("val").Or(Parse.String("var")).Token();
 
         private static readonly Parser<IArgumentSyntaxNode> ArgParser =
             from _ in Whitespaces
