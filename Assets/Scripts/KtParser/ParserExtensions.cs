@@ -112,16 +112,15 @@ namespace DefaultNamespace.KtParser
             p1.Map( b => 
                 (a, b)
             ));
-        
-        public static Parser<(TL, T, TR)> SurroundBy<TL, T, TR>(this Parser<T> p0, Parser<TL> pl, Parser<TR> pr) =>
+
+        public static Parser<T> SurroundBy<TL, T, TR>(this Parser<T> p0, Parser<TL> pl, Parser<TR> pr) =>
             pl.Bind(a => 
             p0.Bind( b =>
             pr.Map(c =>
-                (a, b, c)        
+                b      
             )));
 
         public static Parser<T> Braces<T>(this Parser<T> p, char lBrace, char rBrace) =>
-            p.SurroundBy(Parse.Char(lBrace).Token(), Parse.Char(rBrace).Token())
-                .Map(it => it.Item2);
+            p.SurroundBy(Parse.Char(lBrace).Token(), Parse.Char(rBrace).Token());
     }
 }

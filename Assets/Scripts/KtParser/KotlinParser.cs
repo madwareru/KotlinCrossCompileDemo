@@ -47,9 +47,7 @@ namespace DefaultNamespace.KtParser
 
         private static readonly Parser<string> WordParser =
             Parse.Identifier(Parse.Letter, Parse.LetterOrDigit);
-
-        private static readonly Parser<IEnumerable<char>> Whitespaces =
-            Parse.WhiteSpace.Many();
+        
         #endregion
 
         #region Blank Parsers
@@ -59,7 +57,7 @@ namespace DefaultNamespace.KtParser
             select "";
 
         private static readonly Parser<string> BlankLines =
-            from _ in Whitespaces.Or(Parse.LineTerminator).Or(CommentParser).Many()
+            from _ in Parse.WhiteSpace.Many().Or(Parse.LineTerminator).Or(CommentParser).Many()
             select "";
 
         #endregion
@@ -94,23 +92,27 @@ namespace DefaultNamespace.KtParser
             select true;
 
         private static readonly Parser<string> AnnotationParser =
-            from _ in Parse.Char('@')
-            from identifier in WordParser
-            select identifier;
+            WordParser.SurroundBy(
+                Parse.Char('@'), 
+                Parse.Identifier(
+                    Parse.Letter, 
+                    Parse.LetterOrDigit.Or(Parse.Char('_'))
+                ).Braces('(', ')').Optional()
+            );
 
         private static readonly Parser<bool> ImportHeading =
             from _ in BlankLines.Seq(ImportParser.Many()).Seq(BlankLines)
             select true;
 
         private static readonly Parser<(bool, string)> ArrayParser =
-            from _ in
-                Parse.String("Array").Token()
-                    .Seq(Parse.Char('<').Token())
-                    .Seq(VarianceParser.Optional())
-                    .Token()
-            from type in LetterDigitOrDot.Many()
-            from __ in Parse.Char('>').Token()
-            select (true, RemovePrefix(new string(type.ToArray())));
+            LetterDigitOrDot
+                .Many()
+                .SurroundBy(
+                    Parse.String("Array").Token()
+                        .Seq(Parse.Char('<').Token())
+                        .Seq(VarianceParser.Optional()).Token(),
+                    Parse.Char('>').Token()
+                ).Map(it => (true, RemovePrefix(new string(it.ToArray()))));
 
         private static readonly Parser<(bool, string)> NonArrayParser =
             from w in WordParser
@@ -125,40 +127,42 @@ namespace DefaultNamespace.KtParser
                 : new SmartTypeSyntaxNode(name);
 
         private static readonly Parser<IEnumerable<char>> VarValParser =
-            Parse.String("val").Or(Parse.String("var")).Token();
+            Parse.String("val").Or(Parse.String("var"));
 
         private static readonly Parser<IArgumentSyntaxNode> ArgParser =
             from name in WordParser.Token()
-            from __ in Parse.Char(':').Token()
-            from type in TypeParser
-            from ___ in Parse.Char('?').Many().Token()
-                .Seq(Parse.Char(',').Many().Token())
-            select new ArgumentSyntaxNode(type, name);
+            from typeInfo in TypeParser.SurroundBy(
+                Parse.Char(':').Token(),
+                Parse.Char('?').Many().Token().Seq(Parse.Char(',').Many().Token())
+            )
+            select new ArgumentSyntaxNode(typeInfo, name);
         
         private static readonly Parser<IArgumentSyntaxNode> ConstructorArgParser =
-            from __ in VarValParser
-            from arg in ArgParser
-            select arg;
+            VarValParser.Token().Seq(ArgParser).Map(it => it.Item2);
 
         private static readonly Parser<ITypeSyntaxNode> ReturnTypeParser =
             TypeParser
                 .SurroundBy(
                     Parse.Char(':').Token(),
                     Parse.Char('?').Many()
-                ).Map(it => it.Item2)
+                )
                 .Optional()
                 .Map(it => it.UnwrapOrDefault(new SmartTypeSyntaxNode("Void")));
 
-        private static readonly Parser<IMethodSyntaxNode> MethodParser =
-            from _ in AnnotationParser.Token().Many().Optional()
-                .Seq(BlankLines.Optional())
-                .Seq(Parse.String("abstract").Token().Optional())
-                .Seq(Parse.String("fun").Token())
+        private static Parser<IMethodSyntaxNode> MeaningfulMethodIfoParser = 
             from methodName in WordParser.Token()
             from args in ArgParser.Many().Braces('(', ')').Token()
             from returnedType in ReturnTypeParser
-            from __ in BlankLines.Many()
             select new MethodSyntaxNode(methodName, returnedType,args.ToArray());
+
+        private static readonly Parser<IMethodSyntaxNode> MethodParser =
+            MeaningfulMethodIfoParser
+                .SurroundBy(
+                    Annotated(
+                        Parse.String("abstract").Token().Optional().Seq(Parse.String("fun").Token())
+                    ),
+                    BlankLines.Many()
+                );
 
         private static readonly Parser<IArgumentsSyntaxNode> ConstructorArgsParser =
             from args in ConstructorArgParser.Many().Braces('(', ')')
@@ -170,28 +174,34 @@ namespace DefaultNamespace.KtParser
                     InterfaceAncestors.Optional().Seq(Parse.Char('{').Once()).Seq(BlankLines).Token(),
                     Parse.Char('}').Seq(BlankLines)
                 )
-                .Map(it => it.Item2.ToArray());
+                .Map(it => it.ToArray());
         
         private static readonly IArgumentsSyntaxNode EmptyArgumentsSyntaxNode = new ArgumentsSyntaxNode();
 
+        private static Parser<T> Annotated<T>(Parser<T> p) =>
+            AnnotationParser.Token().Many().Optional()
+                .Seq(BlankLines.Optional())
+                .Seq(p)
+                .Map(it => it.Item2);
+
         private static readonly Parser<IRootSyntaxNode> AbstractClassParser =
             from packageName in PackageParser
-            from _ in ImportHeading.Seq(Parse.String("abstract class")).Token()
+            from _ in ImportHeading.Seq(Annotated(Parse.String("abstract class"))).Token()
             from abstractClassName in WordParser.Token()
             from constructorArgs in ConstructorArgsParser.Optional()
             from classMethods in SharedBodyParser
             let constructorArguments = constructorArgs.UnwrapOrDefault(EmptyArgumentsSyntaxNode)
             let className = $"{packageName}.{RemoveAbstract(abstractClassName)}"
             select new RootSyntaxNode(className, constructorArguments, classMethods);
-        
+
         private static readonly Parser<IRootSyntaxNode> InterfaceParser =
             from packageName in PackageParser
-            from _ in ImportHeading.Seq(Parse.String("interface")).Token()
+            from _ in ImportHeading.Seq(Annotated(Parse.String("interface"))).Token()
             from interfaceName in WordParser.Token()
             from interfaceMethods in SharedBodyParser
             let className = $"{packageName}.{RemoveI(interfaceName)}"
             select new RootSyntaxNode(className, interfaceMethods);
-
+        
         #endregion
     }
 }
