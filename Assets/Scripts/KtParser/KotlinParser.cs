@@ -66,18 +66,16 @@ namespace DefaultNamespace.KtParser
 
         #region Class Parsers
         
-        private static readonly Parser<bool> AncestorStart =
+        private static readonly Parser<bool> InterfaceAncestorStart =
             from _ in Parse.Char(':').Token()
             select true;
 
-        private static readonly Parser<bool> AncestorType =
-            from _ in Parse.Letter.Seq(LetterDigitOrDot.Many())
-            from comma in Parse.Char(',').Optional()
-            from __ in Whitespaces 
+        private static readonly Parser<bool> InterfaceAncestorType =
+            from _ in Parse.Letter.Seq(LetterDigitOrDot.Many()).Seq(Parse.Char(',').Optional()).Token()
             select true;
 
-        private static readonly Parser<bool> Ancestors =
-            from _ in AncestorStart.Seq(AncestorType.Many())
+        private static readonly Parser<bool> InterfaceAncestors =
+            from _ in InterfaceAncestorStart.Seq(InterfaceAncestorType.Many())
             select true;
 
         private static readonly Parser<IEnumerable<char>> VarianceParser =
@@ -162,24 +160,20 @@ namespace DefaultNamespace.KtParser
                 .Seq(Parse.String("fun"))
                 .Seq(Whitespaces)
             from methodName in WordParser
-            from openBraceToken in Parse.Char('(')
-            from args in ArgParser.Many()
-            from closingBraceToken in Parse.Char(')').Seq(Whitespaces)
+            from args in ArgParser.Many().Braces('(', ')').Token()
             from returnedType in ReturnTypeParser
             from __ in BlankLines.Many()
             select new MethodSyntaxNode(methodName, returnedType,args.ToArray());
 
         private static readonly Parser<IArgumentsSyntaxNode> ConstructorArgsParser =
-            from _ in Parse.Char('(')
-            from args in ConstructorArgParser.Many()
-            from __ in Parse.Char(')')
+            from args in ConstructorArgParser.Many().Braces('(', ')')
             select new ArgumentsSyntaxNode(args.ToArray());
 
         private static readonly Parser<IMethodSyntaxNode[]> ObjectBodyParser =
-            from _ in Whitespaces
-                .Seq(Ancestors.Optional())
+            from _ in InterfaceAncestors.Optional()
                 .Seq(Parse.Char('{').Once())
                 .Seq(BlankLines)
+                .Token()
             from methods in MethodParser.Many()
             from __ in Parse.Char('}').Seq(BlankLines)
             select methods.ToArray();
