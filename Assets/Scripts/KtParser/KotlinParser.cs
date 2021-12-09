@@ -131,11 +131,8 @@ namespace DefaultNamespace.KtParser
             Parse.String("val").Or(Parse.String("var")).Token();
 
         private static readonly Parser<IArgumentSyntaxNode> ArgParser =
-            from _ in Whitespaces
-            from name in WordParser
-            from __ in Whitespaces
-                .Seq(Parse.Char(':'))
-                .Seq(Whitespaces)
+            from name in WordParser.Token()
+            from __ in Parse.Char(':').Token()
             from type in TypeParser
             from ___ in Parse.Char('?').Many()
                 .Seq(Whitespaces)
@@ -144,18 +141,9 @@ namespace DefaultNamespace.KtParser
             select new ArgumentSyntaxNode(type, name);
         
         private static readonly Parser<IArgumentSyntaxNode> ConstructorArgParser =
-            from _ in Whitespaces
             from __ in VarValParser
-            from name in WordParser
-            from ___ in Whitespaces
-                .Seq(Parse.Char(':'))
-                .Seq(Whitespaces)
-            from type in TypeParser
-            from ____ in Parse.Char('?').Many()
-                .Seq(Whitespaces)
-                .Seq(Parse.Char(',').Many())
-                .Seq(Whitespaces)
-            select new ArgumentSyntaxNode(type, name);
+            from arg in ArgParser
+            select arg;
 
         private static readonly Parser<ITypeSyntaxNode> ReturnTypeParser =
             from t in
