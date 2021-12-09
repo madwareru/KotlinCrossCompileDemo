@@ -67,7 +67,7 @@ namespace DefaultNamespace.KtParser
         #region Class Parsers
         
         private static readonly Parser<bool> AncestorStart =
-            from _ in Parse.Char(':').Seq(Whitespaces)
+            from _ in Parse.Char(':').Token()
             select true;
 
         private static readonly Parser<bool> AncestorType =
@@ -84,14 +84,13 @@ namespace DefaultNamespace.KtParser
             Parse.String("in").Or(Parse.String("out")).Token();
       
         private static readonly Parser<string> PackageParser =
-            from _ in Parse.String("package").Seq(Whitespaces)
+            from _ in Parse.String("package").Token()
             from chars in LetterDigitOrDot.Many()
             select string.Join("", chars);
 
         private static readonly Parser<bool> ImportParser =
             from _ in 
-                Parse.String("import")
-                    .Seq(Whitespaces)
+                Parse.String("import").Token()
                     .Seq(LetterDigitOrDot.Many())
                     .Seq(BlankLines)
             select true;
@@ -134,10 +133,8 @@ namespace DefaultNamespace.KtParser
             from name in WordParser.Token()
             from __ in Parse.Char(':').Token()
             from type in TypeParser
-            from ___ in Parse.Char('?').Many()
-                .Seq(Whitespaces)
-                .Seq(Parse.Char(',').Many())
-                .Seq(Whitespaces)
+            from ___ in Parse.Char('?').Many().Token()
+                .Seq(Parse.Char(',').Many().Token())
             select new ArgumentSyntaxNode(type, name);
         
         private static readonly Parser<IArgumentSyntaxNode> ConstructorArgParser =
