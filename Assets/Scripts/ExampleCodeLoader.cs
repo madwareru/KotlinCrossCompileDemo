@@ -17,8 +17,8 @@ import com.madware.external_texture.wrappers.AbstractExternalTexturesPoolWrapper
 import com.madware.external_texture.wrappers.ITextureIdListenerWrapperProxy
 
 abstract class AbstractVlcPlayerWrapperObject(
-        pool: AbstractExternalTexturesPoolWrapperObject,
-        proxy: ITextureIdListenerWrapperProxy) {
+        val pool: AbstractExternalTexturesPoolWrapperObject,
+        val proxy: ITextureIdListenerWrapperProxy) {
     @Keep
     abstract fun play()
     @Keep
