@@ -141,15 +141,13 @@ namespace DefaultNamespace.KtParser
             select arg;
 
         private static readonly Parser<ITypeSyntaxNode> ReturnTypeParser =
-            from t in
-                (
-                    from _ in Parse.Char(':').Seq(Whitespaces)
-                    from returnedType in TypeParser
-                    from __ in  Parse.Char('?').Many()
-                    select returnedType
-                )
+            TypeParser
+                .SurroundBy(
+                    Parse.Char(':').Token(),
+                    Parse.Char('?').Many()
+                ).Map(it => it.Item2)
                 .Optional()
-            select t.UnwrapOrDefault(new SmartTypeSyntaxNode("Void"));
+                .Map(it => it.UnwrapOrDefault(new SmartTypeSyntaxNode("Void")));
 
         private static readonly Parser<IMethodSyntaxNode> MethodParser =
             from _ in AnnotationParser.Token().Many().Optional()

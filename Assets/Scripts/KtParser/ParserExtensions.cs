@@ -121,7 +121,7 @@ namespace DefaultNamespace.KtParser
             )));
 
         public static Parser<T> Braces<T>(this Parser<T> p, char lBrace, char rBrace) =>
-            p.SurroundBy(Parse.Char(lBrace), Parse.Char(rBrace))
+            p.SurroundBy(Parse.Char(lBrace).Token(), Parse.Char(rBrace).Token())
                 .Map(it => it.Item2);
     }
 }
