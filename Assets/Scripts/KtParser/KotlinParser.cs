@@ -128,6 +128,11 @@ namespace DefaultNamespace.KtParser
                 ? new ArrayTypeSyntaxNode(new SmartTypeSyntaxNode(name)) as ITypeSyntaxNode
                 : new SmartTypeSyntaxNode(name);
 
+        private static readonly Parser<IEnumerable<char>> VarValParser =
+            from v in Parse.String("val").Or(Parse.String("var"))
+            from _ in Whitespaces
+            select v;
+
         private static readonly Parser<IArgumentSyntaxNode> ArgParser =
             from _ in Whitespaces
             from name in WordParser
@@ -136,6 +141,20 @@ namespace DefaultNamespace.KtParser
                 .Seq(Whitespaces)
             from type in TypeParser
             from ___ in Parse.Char('?').Many()
+                .Seq(Whitespaces)
+                .Seq(Parse.Char(',').Many())
+                .Seq(Whitespaces)
+            select new ArgumentSyntaxNode(type, name);
+        
+        private static readonly Parser<IArgumentSyntaxNode> ConstructorArgParser =
+            from _ in Whitespaces
+            from __ in VarValParser
+            from name in WordParser
+            from ___ in Whitespaces
+                .Seq(Parse.Char(':'))
+                .Seq(Whitespaces)
+            from type in TypeParser
+            from ____ in Parse.Char('?').Many()
                 .Seq(Whitespaces)
                 .Seq(Parse.Char(',').Many())
                 .Seq(Whitespaces)
@@ -170,7 +189,7 @@ namespace DefaultNamespace.KtParser
 
         private static readonly Parser<IArgumentsSyntaxNode> ConstructorArgsParser =
             from _ in Parse.Char('(')
-            from args in ArgParser.Many()
+            from args in ConstructorArgParser.Many()
             from __ in Parse.Char(')')
             select new ArgumentsSyntaxNode(args.ToArray());
 
