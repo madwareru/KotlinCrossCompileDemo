@@ -54,17 +54,17 @@ namespace KtParser.AST.SyntaxNodes.Impl.Methods
 
         public ICodeWriter GenerateCSharpProxy(ICodeWriter cb)
         {
-            var innerCall = $"_inner.{_name.ToUpperFirst()}({_arguments.CSharpNames()});";
+            var innerCall = $"    _inner.{_name.ToUpperFirst()}({_arguments.CSharpNames()});";
             return cb.Do(
                 AddLine("// ReSharper disable once InconsistentNaming, UnusedMember.Global") +
                 AddLineWithBracket($"public {_returnType.GenerateCSharp()} {_name}({_arguments.GenerateCSharp()})") +
                 (_returnType.IsVoid() 
                     ?
-                        AddLineWithBracket("AsyncManager.ExecuteOnMainThread(() =>") +
+                        AddLine("AsyncManager.ExecuteOnMainThread(() =>") +
+                        AddLine("{") +
                         AddLine(innerCall) +
-                        CloseBracket()
-                    : 
-                        AddLine($"return {innerCall}")
+                        AddLine("});")
+                    : AddLine($"return {innerCall}")
                 ) +
                 CloseBracket()
             );

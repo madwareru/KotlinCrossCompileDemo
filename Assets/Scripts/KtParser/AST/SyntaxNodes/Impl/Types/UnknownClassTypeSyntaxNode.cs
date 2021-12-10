@@ -1,4 +1,5 @@
 using KtParser.AST.SyntaxNodes.Types;
+using UnityEngine;
 
 namespace KtParser.AST.SyntaxNodes.Impl.Types
 {
@@ -8,14 +9,21 @@ namespace KtParser.AST.SyntaxNodes.Impl.Types
 
         public UnknownClassTypeSyntaxNode(string name)
         {
+            Debug.Log(name);
             _name = name;
         }
 
-        public string GenerateCSharp() => "AndroidJavaObject";
+        public string GenerateCSharp() => 
+            _name.StartsWith("I") 
+                ? "AndroidJavaProxy"
+                :"AndroidJavaObject";
 
         public string GenerateKotlin() => _name;
 
-        public string CSharpGeneric() => "<AndroidJavaObject>";
+        public string CSharpGeneric() => 
+            _name.StartsWith("I") 
+                ? "<AndroidJavaProxy>"
+                :"<AndroidJavaObject>";
 
         public string KotlinReturned() => _name;
 

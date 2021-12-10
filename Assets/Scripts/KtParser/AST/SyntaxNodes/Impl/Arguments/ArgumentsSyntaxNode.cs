@@ -22,6 +22,6 @@ namespace KtParser.AST.SyntaxNodes.Impl.Arguments
             string.Join(", ", _arguments.Select(a => a.GenCSharpName()));
         
         public string CSharpNamesWithComma() =>
-            string.Join("", _arguments.Select(a => ", " + a.GenCSharpArgumentName().ToLowerFirst()));
+            string.Join("", _arguments.Select(a => ", " + a.GenCSharpName().ToLowerFirst()));
     }
 }

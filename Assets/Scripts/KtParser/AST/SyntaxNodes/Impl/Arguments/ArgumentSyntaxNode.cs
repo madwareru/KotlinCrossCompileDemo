@@ -25,9 +25,6 @@ namespace KtParser.AST.SyntaxNodes.Impl.Arguments
 
         public string GenerateKotlin() =>
             $"{_name}: {_type.GenerateKotlin()}";
-        
-        public string GenCSharpArgumentName() =>
-            _type.CSharpAsArgument(_name);
 
         public string GenCSharpName() => _name;
     }

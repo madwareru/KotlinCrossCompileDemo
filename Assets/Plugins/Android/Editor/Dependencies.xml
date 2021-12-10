@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dependencies>
+    <androidPackages>
+        <androidPackage spec="org.jetbrains.kotlin:kotlin-stdlib:1.5.10" />
+    </androidPackages>
+</dependencies>

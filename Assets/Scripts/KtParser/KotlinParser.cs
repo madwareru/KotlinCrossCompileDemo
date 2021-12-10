@@ -29,15 +29,6 @@ namespace DefaultNamespace.KtParser
 
         #region Remove prefix functions
 
-        private static string RemoveAbstract(string text) =>
-            text.StartsWith("Abstract") ? text.Substring(8) : text;
-
-        private static string RemoveI(string text) =>
-            text.StartsWith("I") && char.IsUpper(text[1]) ? text.Substring(1) : text;
-
-        private static string RemovePrefix(string text) =>
-            text.StartsWith("Abstract") ? text.Substring(8) : RemoveI(text);
-
         #endregion
 
         #region Char Parsers
@@ -111,10 +102,10 @@ namespace DefaultNamespace.KtParser
                         .Seq(Parse.Char('<').Token())
                         .Seq(VarianceParser.Optional()).Token(),
                     Parse.Char('>').Token()
-                ).Map(it => (true, RemovePrefix(new string(it.ToArray()))));
+                ).Map(it => (true, new string(it.ToArray())));
 
         private static readonly Parser<(bool, string)> NonArrayParser =
-            WordParser.Map(it => (false, RemovePrefix(it)));
+            WordParser.Map(it => (false, it));
 
         private static readonly Parser<ITypeSyntaxNode> TypeParser = 
             from result in ArrayParser.Or(NonArrayParser)
@@ -195,6 +186,20 @@ namespace DefaultNamespace.KtParser
             from interfaceMethods in SharedBodyParser
             let className = $"{packageName}.{RemoveI(interfaceName)}"
             select new RootSyntaxNode(className, interfaceMethods);
+
+        private static string RemoveAbstract(string name)
+        {
+            if (name.StartsWith("Abstract"))
+                return name.Substring(8);
+            return name;
+        }
+        
+        private static string RemoveI(string name)
+        {
+            if (name.StartsWith("I"))
+                return name.Substring(1);
+            return name;
+        }
         
         #endregion
     }

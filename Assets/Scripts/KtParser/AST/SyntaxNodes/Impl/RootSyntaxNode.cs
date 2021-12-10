@@ -45,7 +45,7 @@ namespace KtParser.AST.SyntaxNodes.Impl
             cb.Do(
                 AddLine($"using {nameof(UnityEngine)};\n\n") +
 
-                AddLineWithBracket("namespace Wrapped.Native") +
+                AddLineWithBracket("namespace DemoApp") +
                 AddLineWithBracket($"public class {GetCSharpClassName()}") +
 
                 AddLine("private readonly AndroidJavaObject _androidJavaObject;\n") +
@@ -55,11 +55,7 @@ namespace KtParser.AST.SyntaxNodes.Impl
                 AddLine(
                     $"_androidJavaObject = new AndroidJavaObject(\"{KotlinFullClassName()}\"{_constructorArguments.CSharpNamesWithComma()});") +
                 CloseBracket() +
-                AddLine() +
-                AddLineWithBracket($"public {GetCSharpClassName()}(AndroidJavaObject androidJavaObject)") +
-                AddLine("_androidJavaObject = androidJavaObject;") +
-                CloseBracket() +
-                
+
                 _methods.Aggregate(Entry, (x, y) => x + y.GenerateCSharpObject) +
                 
                 CloseBracket() + 
@@ -70,10 +66,10 @@ namespace KtParser.AST.SyntaxNodes.Impl
         {
             var innerInterfaceType = $"I{GetCSharpClassName()}";
             return cb.Do(
-                AddLine($"using Madware.Utils;\n\n") +
+                AddLine("using DemoApp.Utils;\n\n") +
                 AddLine($"using {nameof(UnityEngine)};\n\n") +
 
-                AddLineWithBracket("namespace Wrapped.Native") +
+                AddLineWithBracket("namespace DemoApp") +
                 
                 AddLineWithBracket($"public class {GetCSharpClassName()}: AndroidJavaProxy") +
                 
